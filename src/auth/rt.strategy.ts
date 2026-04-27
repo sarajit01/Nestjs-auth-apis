@@ -18,6 +18,7 @@ export class RTStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
 
     console.log('Triggering the validate function of RT strategy o passport');
     console.log(payload);
+    payload.id = payload.sub;
     return { ...payload, refreshToken };
   }
 }

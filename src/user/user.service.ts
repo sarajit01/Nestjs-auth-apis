@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { DbService } from '../db/db.service';
@@ -50,5 +50,40 @@ export class UserService {
 
   remove(id: number) {
     return `This action removes a #${id} user`;
+  }
+
+  // save the token
+  async saveRefreshToken(userId: number, token: string) {
+    // save token
+    return await this.dbService.refreshToken.create({
+      data: {
+        user_id: userId,
+        token: this.hasher.hashToken(token), // save the token in hashed format
+        status: 'ACTIVE',
+      },
+    });
+  }
+
+  // update token
+  async updateRefreshToken(userId: number, token: string, updatableTokenId) {
+    return await this.dbService.refreshToken.update({
+      data: {
+        token: this.hasher.hashToken(token),
+      },
+      where: {
+        id: updatableTokenId,
+      },
+    });
+  }
+
+  async getMatchedToken(userId: number, token: string) {
+    console.log('Hashed by crypto', this.hasher.hashToken(token));
+
+    return await this.dbService.refreshToken.findFirst({
+      where: {
+        user_id: userId,
+        token: this.hasher.hashToken(token),
+      },
+    });
   }
 }

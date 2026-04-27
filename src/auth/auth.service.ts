@@ -23,7 +23,7 @@ export class AuthService {
     }
 
     // user exists, check if password matches
-    const isPassCorrect = await this.hasher.comparePasswords(
+    const isPassCorrect = await this.hasher.comparePassword(
       user.password,
       password,
     );
@@ -31,10 +31,18 @@ export class AuthService {
       throw new UnauthorizedException('The password you entered is wrong');
     }
 
-    return await this.getTokens(user.id, user.email);
+    // obtain tokens
+    const { access_token, refresh_token } = await this.generateTokens(
+      user.id,
+      user.email,
+    );
+    // save the refresh token in db
+    this.userService.saveRefreshToken(user.id, refresh_token);
+
+    return { access_token, refresh_token };
   }
 
-  async getTokens(userId: number, email: string) {
+  async generateTokens(userId: number, email: string) {
     const [at, rt] = await Promise.all([
       this.jwtService.signAsync(
         { sub: userId, email },
@@ -50,6 +58,30 @@ export class AuthService {
       access_token: at,
       refresh_token: rt,
     };
+  }
+
+  async refreshToken(user: any, attemptedToken: string) {
+    console.log('Hasing attemptedToken', attemptedToken);
+    const userValidToken = await this.userService.getMatchedToken(
+      user.id,
+      attemptedToken,
+    );
+    if (!userValidToken) {
+      throw new UnauthorizedException('The refresh token is invalid');
+    }
+
+    const { access_token, refresh_token } = await this.generateTokens(
+      user.id,
+      user.email,
+    );
+
+    const updateExistingToken = await this.userService.updateRefreshToken(
+      user.id,
+      refresh_token,
+      userValidToken.id,
+    );
+
+    return { access_token, refresh_token };
   }
 
   async getProfile(id: number) {

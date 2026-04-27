@@ -29,11 +29,12 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt-refresh'))
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  refreshTokens(@Req() req: any) {
+  refreshToken(@Req() req: any) {
     const user = req.user;
     console.log('User info from passport:');
     console.log(user);
-    return this.authService.getTokens(user.sub, user.email);
+    console.log('Hashable token', user.refreshToken);
+    return this.authService.refreshToken(user, user.refreshToken);
   }
 
   @UseGuards(AuthGuard('jwt'))
