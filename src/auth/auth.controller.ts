@@ -43,4 +43,11 @@ export class AuthController {
     const { user } = req;
     return this.authService.getProfile(user.sub);
   }
+
+  @UseGuards(AuthGuard('jwt-refresh'))
+  @Post('delete-refresh-tokens')
+  deleteRefreshTokens(@Req() req: any) {
+    const { user } = req;
+    return this.authService.deleteTokens(user);
+  }
 }

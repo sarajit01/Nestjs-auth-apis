@@ -84,6 +84,10 @@ export class AuthService {
     return { access_token, refresh_token };
   }
 
+  async deleteTokens(user: any) {
+    return this.userService.deleteAllRefreshTokens(user.id);
+  }
+
   async getProfile(id: number) {
     const user = await this.userService.findOne(id);
     if (!user) {

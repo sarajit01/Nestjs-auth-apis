@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { DbService } from '../db/db.service';
@@ -85,5 +89,17 @@ export class UserService {
         token: this.hasher.hashToken(token),
       },
     });
+  }
+
+  async deleteAllRefreshTokens(userId: number) {
+    try {
+      return await this.dbService.refreshToken.deleteMany({
+        where: {
+          user_id: userId,
+        },
+      });
+    } catch {
+      throw new InternalServerErrorException('Failed to delete refresh tokens');
+    }
   }
 }
